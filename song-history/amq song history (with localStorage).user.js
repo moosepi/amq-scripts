@@ -103,12 +103,8 @@ function setup() {
             infoDiv.innerHTML = '';
             return;
         }
-	
-		if (quiz.cslActive) {
-			historyKey = "cslSongHistory"
-		} else {
-			historyKey = "songHistory"
-		}
+
+        const historyKey = "songHistory";
         const songHistory = JSON.parse(localStorage.getItem(historyKey));
         const current = songHistory[webm] ?? {count: 0, correctCount: 0, lastPlayed: 0, lastFive: [false, false, false, false, false]};
         if (!current.lastFive || current.lastFive.filter(x => !x).length > current.count - current.correctCount) {
@@ -163,11 +159,7 @@ function setup() {
      * @param start {string}
      */
     function displaySongHistory(limit = '10', start = '1') {
-	if (quiz.cslActive) {
-	    historyKey = "cslSongHistory"
-	} else {
-	    historyKey = "songHistory"
-	}
+        const historyKey = "songHistory";
         const songsPlayed = [];
         const songs = JSON.parse(localStorage[historyKey]);
 
