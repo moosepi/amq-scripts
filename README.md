@@ -14,16 +14,22 @@ Changes:
 
 - disabled non-strict mode for now since it was buggy from testing 
   - also removed the population of dropdown with the split artist titles since they'd now just be clutter
+- moved hardcoded title/artist list -> a file in this github
 - assorted bugfixes
 
 Known issues:
 
-- overly long artist names hit chatbox limit, prob have to hash these
+- overly long artist names hit chatbox limit, prob have to fix the hashing
 - issues on reconnect
 - issues when attempting to disable while loading a lobby
 - some browsers can't navigate between the boxes with tab?
   - (personally) have had no issue with Firefox
 - can't scroll dd with wheel?
+  - arrow keys are fine
+- sometimes s/a boxes seem to not submit properly
+  - likely due to mashing enter on dropdown not interacting properly?
+  - temp fix for users: after inputting everything go to each box and press enter 
+  - could look into submitting when changing box 
 
 TODO (nice to have):
 
