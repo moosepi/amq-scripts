@@ -96,7 +96,7 @@ async function doCORSRequest(options) {
         if (options.type === 'artists') {
             artists = x.responseText;
             artists = JSON.parse(artists);
-            artists = artists.concat(imssingArtists);
+            artists = artists.concat(missingArtists);
             artistsInit = true;
         }
     };
