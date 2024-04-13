@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AMQ Better Song Artist Mode
 // @namespace    http://tampermonkey.net/
-// @version      1.6.8
+// @version      1.6.9
 // @description  Makes you able to play song/artist with other people who have this script installed. Includes dropdown (with auto-update) and scoretable.
 // @author       4Lajf (forked from Zolhungaj)
 // @match        https://animemusicquiz.com/*
@@ -43,6 +43,17 @@ let modeBinary = true,
     titleValue,
     artistValue;
 
+// locally update titles/artists missing from dd
+if (!localStorage.getItem('bettersaMissingTitles')) {
+    localStorage.setItem('bettersaMissingTitles', '[]');
+}
+if (!localStorage.getItem('bettersaMissingArtists')) {
+    localStorage.setItem('bettersaMissingArtists', '[]');
+}
+
+let missingTitles = JSON.parse(localStorage.getItem('bettersaMissingTitles')),
+    missingArtists = JSON.parse(localStorage.getItem('bettersaMissingArtists'));
+
 // listeners
 let quizReadyRigTracker,
     answerResultsRigTracker,
@@ -78,12 +89,14 @@ async function doCORSRequest(options) {
         if (options.type === 'titles') {
             titles = x.responseText;
             titles = JSON.parse(titles);
+            titles = titles.concat(missingTitles);
             titlesInit = true;
         }
 
         if (options.type === 'artists') {
             artists = x.responseText;
             artists = JSON.parse(artists);
+            artists = artists.concat(imssingArtists);
             artistsInit = true;
         }
     };
@@ -823,6 +836,16 @@ class SongArtistMode {
      * @param {string} songInfo.songName
      */
     #answerResults = ({ artist, songName }) => {
+        if (!(artist in artists)) {
+            artists.push(artist);
+            missingArtists.push(artist);
+            localStorage.setItem('bettersaMissingArtists', JSON.stringify(missingArtists));
+        }
+        if (!(songName in titles)) {
+            titles.push(songName);
+            missingTitles.push(songName);
+            localStorage.setItem('bettersaMissingTitles', JSON.stringify(missingTitles));
+        }
         this.#answerResultsHelper(songName,
             this.#playerHashesSong,
             this.#playerSongScore,
