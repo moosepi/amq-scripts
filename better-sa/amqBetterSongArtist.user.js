@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AMQ Better Song Artist Mode
 // @namespace    http://tampermonkey.net/
-// @version      1.6.9
+// @version      1.7.0
 // @description  Makes you able to play song/artist with other people who have this script installed. Includes dropdown (with auto-update) and scoretable.
 // @author       4Lajf (forked from Zolhungaj)
 // @match        https://animemusicquiz.com/*
@@ -51,8 +51,8 @@ if (!localStorage.getItem('bettersaMissingArtists')) {
     localStorage.setItem('bettersaMissingArtists', '[]');
 }
 
-let missingTitles = JSON.parse(localStorage.getItem('bettersaMissingTitles')),
-    missingArtists = JSON.parse(localStorage.getItem('bettersaMissingArtists'));
+let missingTitles = new Set(JSON.parse(localStorage.getItem('bettersaMissingTitles'))),
+    missingArtists = new Set(JSON.parse(localStorage.getItem('bettersaMissingArtists')));
 
 // listeners
 let quizReadyRigTracker,
@@ -62,6 +62,24 @@ let quizReadyRigTracker,
     quizEndTracker;
 
 if (document.getElementById('startPage')) return;
+
+function setunion(setA, setB) {
+  const _union = new Set(setA);
+  for (const elem of setB) {
+    _union.add(elem);
+  }
+  return _union;
+}
+
+function setdifference(setA, setB) {
+  const _difference = new Set(setA);
+  for (const elem of setA) {
+	if (elem in setB) {
+	  _difference.delete(elem);
+	}
+  }
+  return _difference;
+}
 
 // Wait until the LOADING... screen is hidden and load script
 let loadInterval = setInterval(() => {
@@ -88,15 +106,21 @@ async function doCORSRequest(options) {
 
         if (options.type === 'titles') {
             titles = x.responseText;
-            titles = JSON.parse(titles);
-            titles = titles.concat(missingTitles);
+            titles = new Set(JSON.parse(titles));
+			missingTitles = setdifference(missingTitles, titles);
+            localStorage.setItem('bettersaMissingTitles', JSON.stringify([...missingTitles]));
+            titles = setunion(titles, missingTitles);
+			titles = [...titles];
             titlesInit = true;
         }
 
         if (options.type === 'artists') {
             artists = x.responseText;
-            artists = JSON.parse(artists);
-            artists = artists.concat(missingArtists);
+            artists = new Set(JSON.parse(artists));
+			missingArtists = setdifference(missingArtists, artists);
+            localStorage.setItem('bettersaMissingArtists', JSON.stringify([...missingArtists]));
+            artists = setunion(artists, missingArtists);
+			artists = [...artists];
             artistsInit = true;
         }
     };
@@ -228,8 +252,7 @@ joinLobbyListener = new Listener("Join Game", async (payload) => {
     if (enableBinary === false) {
         return;
     }
-    titlesInit = false
-    artistsInit = false
+
     if (titlesInit === false && artistsInit === false) {
 		doCORSRequest({'method': 'get', 'type': 'titles'});
         doCORSRequest({'method': 'get', 'type': 'artists'});
@@ -838,13 +861,13 @@ class SongArtistMode {
     #answerResults = ({ artist, songName }) => {
         if (!(artist in artists)) {
             artists.push(artist);
-            missingArtists.push(artist);
-            localStorage.setItem('bettersaMissingArtists', JSON.stringify(missingArtists));
+            missingArtists.add(artist);
+            localStorage.setItem('bettersaMissingArtists', JSON.stringify([...missingArtists]));
         }
         if (!(songName in titles)) {
             titles.push(songName);
-            missingTitles.push(songName);
-            localStorage.setItem('bettersaMissingTitles', JSON.stringify(missingTitles));
+            missingTitles.add(songName);
+            localStorage.setItem('bettersaMissingTitles', JSON.stringify([...missingTitles]));
         }
         this.#answerResultsHelper(songName,
             this.#playerHashesSong,
