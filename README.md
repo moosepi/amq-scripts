@@ -13,8 +13,9 @@ Forked from [4Lajf's](https://github.com/4Lajf/amq-scripts/blob/main/amqBetterSo
 Changes:
 
 - disabled non-strict mode for now since it was buggy from testing 
-  - also removed the population of dropdown with the split artist titles since they'd now just be clutter
+  - also removed the population of dropdown with the regex split artist titles since they'd now just be clutter
 - moved hardcoded title/artist list -> a file in this github
+- dropdown should autoupdate now if it sees that a title/artist isn't in dd
 - assorted bugfixes
 
 Known issues:
@@ -29,7 +30,7 @@ Known issues:
 - sometimes s/a boxes seem to not submit properly
   - likely due to mashing enter on dropdown not interacting properly?
   - temp fix for users: after inputting everything go to each box and press enter 
-  - could look into submitting when changing box 
+  - maybe submit when changing box?
 
 TODO (nice to have):
 
@@ -37,3 +38,14 @@ TODO (nice to have):
   - allow reordered combinations of the same artist even in strict mode 
 - integrate with song history 
 - NGMC support? 
+
+## NGMC Elo
+
+Elo calculator for NGMC. WIP.
+Usage: edit `tourlist.txt` and `aliases.txt` as necessary (sample input provided). Cookies also need to be edited for Challonge scraping (ones in the .py file are expired).
+
+TODO: 
+- print history for players (for more transparency)
+	- prob print change per game?
+- cache challonge data
+- automate date sorting
