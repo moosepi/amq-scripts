@@ -147,9 +147,11 @@ function setup() {
         let s = current.count > 1 ? "s" : "";
         let correctRatio = current.correctCount / current.count;
         let lastFiveCorrect = Math.min(current.lastFive.filter(x => x).length, current.count);
+		let lastFiveSquares = current.lastFive.map((isCorrect) => isCorrect ? "🟩" : "🟥").join("");
         infoDiv.innerHTML = `Played <b>${current.count} time${s}</b>`;
         infoDiv.innerHTML += `<br>Correct rate: <b>${current.correctCount}/${current.count}</b> (${(correctRatio * 100).toFixed(2)}%)`;
-        infoDiv.innerHTML += `<br>Last five: <b>${lastFiveCorrect}/${Math.min(current.count, 5)}</b>`;
+        //infoDiv.innerHTML += `<br>Last five: <b>${lastFiveCorrect}/${Math.min(current.count, 5)}</b>`;
+        infoDiv.innerHTML += `<br>Last five: <b>${lastFiveSquares}</b>`;
         infoDiv.innerHTML += `<br>Last played <b>${timeAgo(current.lastPlayed)}</b>`;
     };
     l.bindListener();
