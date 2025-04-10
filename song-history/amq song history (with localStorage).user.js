@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         amq song history (with localStorage) (moosepi fork)
 // @namespace    http://tampermonkey.net/
-// @version      1.52
+// @version      1.53
 // @description  Display Song history in the song info box, including the guess rate and time since last time the song played.
 // @author       Minigamer42
 // @match        https://animemusicquiz.com/*
