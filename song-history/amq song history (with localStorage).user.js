@@ -107,13 +107,13 @@ function setup() {
         const historyKey = "songHistory";
         const songHistory = JSON.parse(localStorage.getItem(historyKey));
         const current = songHistory[webm] ?? {count: 0, correctCount: 0, lastPlayed: 0, lastFive: [false, false, false, false, false]};
-        if (!current.lastFive || current.lastFive.filter(x => !x).length > current.count - current.correctCount) {
-            const lastFiveMaxWrong = Math.min(current.count - current.correctCount, 5);
+        if (!current.lastFive) {
+            //const lastFiveMaxWrong = Math.min(current.count - current.correctCount, 5);
             current.lastFive = [false, false, false, false, false];
-            for (var i = 0; i < Math.min(5, current.count) - lastFiveMaxWrong; i++) {
-                current.lastFive.push(true);
-                current.lastFive.shift();
-            }
+            //for (var i = 0; i < Math.min(5, current.count) - lastFiveMaxWrong; i++) {
+            //    current.lastFive.push(true);
+            //    current.lastFive.shift();
+            //}
         }
         let isCorrect;
         if (quiz.gameMode === "Nexus") {
