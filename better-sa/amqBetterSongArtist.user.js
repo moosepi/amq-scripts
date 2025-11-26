@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AMQ Better Song Artist Mode
 // @namespace    http://tampermonkey.net/
-// @version      1.7.0
+// @version      1.8.0
 // @description  Makes you able to play song/artist with other people who have this script installed. Includes dropdown (with auto-update) and scoretable.
 // @author       4Lajf (forked from Zolhungaj)
 // @match        https://animemusicquiz.com/*
@@ -43,17 +43,6 @@ let modeBinary = true,
     titleValue,
     artistValue;
 
-// locally update titles/artists missing from dd
-if (!localStorage.getItem('bettersaMissingTitles')) {
-    localStorage.setItem('bettersaMissingTitles', '[]');
-}
-if (!localStorage.getItem('bettersaMissingArtists')) {
-    localStorage.setItem('bettersaMissingArtists', '[]');
-}
-
-let missingTitles = new Set(JSON.parse(localStorage.getItem('bettersaMissingTitles'))),
-    missingArtists = new Set(JSON.parse(localStorage.getItem('bettersaMissingArtists')));
-
 // listeners
 let quizReadyRigTracker,
     answerResultsRigTracker,
@@ -63,22 +52,35 @@ let quizReadyRigTracker,
 
 if (document.getElementById('startPage')) return;
 
-function setunion(setA, setB) {
-  const _union = new Set(setA);
-  for (const elem of setB) {
-    _union.add(elem);
-  }
-  return _union;
-}
+async function initTitlesAndArtists() {
+    titles = [];
+    artists = [];
+    const resp = await fetch("https://animemusicquiz.com/libraryMasterList");
+    const libraryMasterList = await resp.json();
 
-function setdifference(setA, setB) {
-  const _difference = new Set(setA);
-  for (const elem of setA) {
-	if (elem in setB) {
-	  _difference.delete(elem);
-	}
-  }
-  return _difference;
+    const songMap = libraryMasterList.songMap;
+    const artistsMap = libraryMasterList.artistMap;
+    const groupMap = libraryMasterList.groupMap;
+
+    for (let songKey in songMap) {
+        titles.push(songMap[songKey].name);
+    }
+    for (let artistKey in artistsMap) {
+        artists.push(artistsMap[artistKey].name);
+    }
+    for (let groupKey in groupMap) {
+        artists.push(groupMap[groupKey].name);
+    }
+    titles = [...new Set(titles)];
+    artists = [...new Set(artists)];
+    titles.sort();
+    artists.sort();
+
+    titles.sort((a, b) => a.length - b.length);
+    artists.sort((a, b) => a.length - b.length);
+
+    titlesInit = true;
+    artistsInit = true;
 }
 
 // Wait until the LOADING... screen is hidden and load script
@@ -93,39 +95,6 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// get artist/titles from github
-let cors_api_url = 'https://raw.githubusercontent.com/moosepi/amq-scripts/main/better-sa/';
-async function doCORSRequest(options) {
-    if (enableBinary === false) {
-        return;
-    }
-
-    let x = new XMLHttpRequest();
-    x.open(options.method, cors_api_url + options.type);
-    x.onload = x.onerror = function () {
-
-        if (options.type === 'titles') {
-            titles = x.responseText;
-            titles = new Set(JSON.parse(titles));
-			missingTitles = setdifference(missingTitles, titles);
-            localStorage.setItem('bettersaMissingTitles', JSON.stringify([...missingTitles]));
-            titles = setunion(titles, missingTitles);
-			titles = [...titles];
-            titlesInit = true;
-        }
-
-        if (options.type === 'artists') {
-            artists = x.responseText;
-            artists = new Set(JSON.parse(artists));
-			missingArtists = setdifference(missingArtists, artists);
-            localStorage.setItem('bettersaMissingArtists', JSON.stringify([...missingArtists]));
-            artists = setunion(artists, missingArtists);
-			artists = [...artists];
-            artistsInit = true;
-        }
-    };
-    x.send(options.data);
-}
 
 // Writes the current rig to scoreboard
 function writeRigToScoreboard() {
@@ -231,10 +200,11 @@ quizReadyRigTracker = new Listener("quiz ready", async (data) => {
     if (enableBinary === false) {
         return;
     }
-    //Fetches title and artist list from an API
-    doCORSRequest({'method': 'get', 'type': 'titles'});
-    doCORSRequest({'method': 'get', 'type': 'artists'});
-    artistMap = {}
+
+    if (titlesInit === false && artistsInit === false) {
+        await initTitlesAndArtists();
+        artistMap = {}
+    }
 
     playerAmount = Object.entries(quiz.players).length
     returningToLobby = false;
@@ -254,8 +224,7 @@ joinLobbyListener = new Listener("Join Game", async (payload) => {
     }
 
     if (titlesInit === false && artistsInit === false) {
-		doCORSRequest({'method': 'get', 'type': 'titles'});
-        doCORSRequest({'method': 'get', 'type': 'artists'});
+        await initTitlesAndArtists();
         artistMap = {}
     }
 
@@ -859,16 +828,6 @@ class SongArtistMode {
      * @param {string} songInfo.songName
      */
     #answerResults = ({ artist, songName }) => {
-        if (!(artist in artists)) {
-            artists.push(artist);
-            missingArtists.add(artist);
-            localStorage.setItem('bettersaMissingArtists', JSON.stringify([...missingArtists]));
-        }
-        if (!(songName in titles)) {
-            titles.push(songName);
-            missingTitles.add(songName);
-            localStorage.setItem('bettersaMissingTitles', JSON.stringify([...missingTitles]));
-        }
         this.#answerResultsHelper(songName,
             this.#playerHashesSong,
             this.#playerSongScore,
